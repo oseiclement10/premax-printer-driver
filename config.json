@@ -1,0 +1,5 @@
+{
+  "printerName": "Premax POS-80",
+  "port": 9101,
+  "allowedOrigins": ["*"]
+}
