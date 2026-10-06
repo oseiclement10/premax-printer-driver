@@ -75,18 +75,15 @@ public class RawPrinter {
 }
 '@
 
-# The configured printer if it exists, otherwise the first thermal-looking one
-# (a "Generic / Text Only" printer on a USB port, or a name like POS/Premax/receipt).
+# The configured printer. If it is missing, fall back to a "Generic / Text Only" printer on a
+# USB port, but only when there is exactly one, so receipts never go to a guessed device.
 function Resolve-Printer {
   $all = @(Get-Printer -ErrorAction SilentlyContinue)
-  $match = $all | Where-Object { $_.Name -eq $config.printerName } | Select-Object -First 1
-  if (-not $match) {
-    $match = $all | Where-Object { $_.DriverName -eq 'Generic / Text Only' -and $_.PortName -like 'USB*' } | Select-Object -First 1
+  $match = @($all | Where-Object { $_.Name -eq $config.printerName })
+  if ($match.Count -eq 0) {
+    $match = @($all | Where-Object { $_.DriverName -eq 'Generic / Text Only' -and $_.PortName -like 'USB*' })
   }
-  if (-not $match) {
-    $match = $all | Where-Object { $_.Name -match 'POS|Premax|receipt|thermal' } | Select-Object -First 1
-  }
-  if ($match) { return $match.Name }
+  if ($match.Count -eq 1) { return $match[0].Name }
   return $null
 }
 

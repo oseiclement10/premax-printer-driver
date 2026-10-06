@@ -18,8 +18,9 @@ if (-not $isAdmin) { throw 'Please run Install.bat (it asks for Administrator pe
 
 # ── 1. Stop any running helper, copy files ──────────────────────────────────
 Step 'Installing print helper'
+# Only our own helper (running from the install folder), never other PowerShell scripts.
 Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" |
-  Where-Object { $_.CommandLine -like '*helper.ps1*' } |
+  Where-Object { $_.CommandLine -like "*$dest*helper.ps1*" } |
   ForEach-Object { Stop-Process -Id $_.ProcessId -Force -ErrorAction SilentlyContinue }
 
 New-Item -ItemType Directory -Path $dest -Force | Out-Null
@@ -41,18 +42,29 @@ if ($existing) {
     Add-PrinterDriver -Name $driverName
     Ok "Added driver '$driverName'"
   }
-  # USB printer ports (USB001, USB002...) only exist once Windows has seen the printer.
-  $usedPorts = @(Get-Printer | ForEach-Object { $_.PortName })
+  # USB printer ports (USB001, USB002...) exist once Windows has seen a printer. A port that
+  # another printer already uses is never reused, so existing printers are left untouched.
+  $queues = @(Get-Printer)
   $usbPorts = @(Get-PrinterPort | Where-Object { $_.Name -like 'USB*' } | ForEach-Object { $_.Name })
-  $free = @($usbPorts | Where-Object { $usedPorts -notcontains $_ })
-  $port = if ($free.Count -gt 0) { $free[0] } elseif ($usbPorts.Count -gt 0) { $usbPorts[0] } else { $null }
+  $free = @($usbPorts | Where-Object { $p = $_; -not ($queues | Where-Object { $_.PortName -eq $p }) })
+
+  $port = $null
+  if ($free.Count -eq 1) {
+    $port = $free[0]
+  } elseif ($free.Count -gt 1) {
+    Warn "Several unused USB ports found: $($free -join ', ')"
+    $choice = Read-Host 'Type the port of the receipt printer (or press Enter to skip)'
+    if ($free -contains $choice.Trim().ToUpper()) { $port = $choice.Trim().ToUpper() }
+  } elseif ($usbPorts.Count -gt 0) {
+    $taken = ($usbPorts | ForEach-Object { $p = $_; "$p ($((($queues | Where-Object { $_.PortName -eq $p }).Name) -join ', '))" }) -join '; '
+    Warn "All USB ports are already used by other printers: $taken"
+  }
 
   if ($port) {
     Add-Printer -Name $printerName -DriverName $driverName -PortName $port
     Ok "Created '$printerName' on $port"
-    if ($free.Count -gt 1) { Warn "Several unused USB ports found ($($free -join ', ')). If the test receipt does not print, tell your admin." }
   } else {
-    Warn 'No USB printer port found. Plug the printer in, switch it on, wait 15 seconds,'
+    Warn 'No new receipt printer was added. Plug the printer in, switch it on, wait 15 seconds,'
     Warn 'then run Install.bat again. (The helper is installed and will find the printer once it exists.)'
   }
 }

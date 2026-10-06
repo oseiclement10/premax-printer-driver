@@ -3,7 +3,7 @@ $ErrorActionPreference = 'SilentlyContinue'
 $dest = Join-Path $env:ProgramFiles 'OACPrintHelper'
 
 Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" |
-  Where-Object { $_.CommandLine -like '*helper.ps1*' } |
+  Where-Object { $_.CommandLine -like "*$dest*helper.ps1*" } |
   ForEach-Object { Stop-Process -Id $_.ProcessId -Force }
 
 Remove-Item (Join-Path ([Environment]::GetFolderPath('CommonStartup')) 'OAC Print Helper.lnk') -Force
