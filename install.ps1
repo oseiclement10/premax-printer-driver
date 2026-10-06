@@ -1,11 +1,11 @@
-# Archys Print Helper installer. Run via Install.bat (it elevates to Administrator).
+# OAC Print Helper installer. Run via Install.bat (it elevates to Administrator).
 # 1. Copies the helper to Program Files
 # 2. Makes sure the Premax receipt printer exists in Windows (creates it if missing)
 # 3. Starts the helper now and at every login
 # 4. Optionally prints a test receipt
 $ErrorActionPreference = 'Stop'
 $src = Split-Path -Parent $MyInvocation.MyCommand.Path
-$dest = Join-Path $env:ProgramFiles 'ArchysPrintHelper'
+$dest = Join-Path $env:ProgramFiles 'OACPrintHelper'
 $printerName = 'Premax POS-80'
 $driverName = 'Generic / Text Only'
 
@@ -59,7 +59,7 @@ if ($existing) {
 
 # ── 3. Start now and at every login (all users) ─────────────────────────────
 Step 'Setting up auto-start'
-$lnk = Join-Path ([Environment]::GetFolderPath('CommonStartup')) 'Archys Print Helper.lnk'
+$lnk = Join-Path ([Environment]::GetFolderPath('CommonStartup')) 'OAC Print Helper.lnk'
 $shell = New-Object -ComObject WScript.Shell
 $s = $shell.CreateShortcut($lnk)
 $s.TargetPath = 'wscript.exe'
@@ -76,14 +76,19 @@ for ($i = 0; $i -lt 10 -and -not $health; $i++) {
   Start-Sleep -Milliseconds 700
   try { $health = Invoke-RestMethod 'http://127.0.0.1:9101/health' -TimeoutSec 2 } catch { }
 }
-if (-not $health) { throw 'The helper did not start. See C:\ProgramData\ArchysPrintHelper\helper.log' }
+if (-not $health) { throw 'The helper did not start. See C:\ProgramData\OACPrintHelper\helper.log' }
 if ($health.printerFound) {
   Ok "Helper running, printer: $($health.printer)"
   $answer = Read-Host 'Print a test receipt now? (Y/N)'
   if ($answer -match '^[Yy]') {
+    # ESC @ init, centered; GS ! 0x11 = double size; ESC E = bold; ESC d 4 = feed; GS V B = cut.
+    $ascii = [Text.Encoding]::ASCII
     $bytes = [byte[]](0x1B, 0x40, 0x1B, 0x61, 1, 0x1D, 0x21, 0x11) +
-      [Text.Encoding]::ASCII.GetBytes("SETUP OK`n") + [byte[]](0x1D, 0x21, 0) +
-      [Text.Encoding]::ASCII.GetBytes("Archys print helper installed`n") +
+      $ascii.GetBytes("SETUP OK`n") + [byte[]](0x1D, 0x21, 0) +
+      $ascii.GetBytes("OAC Print Helper installed`n`n") +
+      [byte[]](0x1B, 0x45, 1) + $ascii.GetBytes("OAC TECH HUB`n") + [byte[]](0x1B, 0x45, 0) +
+      $ascii.GetBytes("Contact us via mail & mobile`n") +
+      $ascii.GetBytes("233200039147`n") +
       [byte[]](0x1B, 0x64, 4, 0x1D, 0x56, 0x42, 0)
     $body = @{ data = [Convert]::ToBase64String($bytes) } | ConvertTo-Json
     Invoke-RestMethod 'http://127.0.0.1:9101/print' -Method Post -ContentType 'application/json' -Body $body | Out-Null
@@ -93,4 +98,4 @@ if ($health.printerFound) {
   Warn 'Helper is running but no receipt printer was found yet. Plug it in and run Install.bat again.'
 }
 
-Write-Host "`nDone. You can now print receipts from the Archys app." -ForegroundColor Green
+Write-Host "`nDone. You can now print receipts from your app." -ForegroundColor Green

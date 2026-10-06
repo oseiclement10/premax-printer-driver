@@ -1,5 +1,5 @@
 @echo off
-rem Installs the Archys Print Helper. Asks for Administrator permission if needed.
+rem Installs the OAC Print Helper. Asks for Administrator permission if needed.
 net session >nul 2>&1
 if %errorlevel% neq 0 (
   echo Requesting Administrator permission...

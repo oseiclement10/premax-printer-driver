@@ -1,4 +1,4 @@
-# Archys Print Helper
+# OAC Print Helper
 
 Lightweight Windows service that prints receipts on 80mm ESC/POS thermal
 printers straight from a web app, with auto-cut, bold text and logo printing,
@@ -20,7 +20,7 @@ POS-80 but works with any ESC/POS printer installed in Windows.
 
 The installer adds the "Generic / Text Only" driver and a "Premax POS-80"
 printer on the USB port if missing, copies the helper to
-`C:\Program Files\ArchysPrintHelper`, and starts it automatically at login.
+`C:\Program Files\OACPrintHelper`, and starts it automatically at login.
 `Uninstall.bat` removes the helper (the Windows printer entry is kept).
 
 ## API
@@ -42,7 +42,7 @@ await fetch("http://127.0.0.1:9101/print", {
 ```
 
 ## Settings
-Edit `config.json` in the install folder (`C:\Program Files\ArchysPrintHelper`):
+Edit `config.json` in the install folder (`C:\Program Files\OACPrintHelper`):
 
 - `printerName`: Windows printer name (default `Premax POS-80`). If it isn't found, the helper picks a Text Only printer on a USB port.
 - `port`: default `9101`
@@ -50,9 +50,12 @@ Edit `config.json` in the install folder (`C:\Program Files\ArchysPrintHelper`):
 
 ## Troubleshooting
 - Health check: open `http://127.0.0.1:9101/health` in a browser.
-- Log: `C:\ProgramData\ArchysPrintHelper\helper.log`
+- Log: `C:\ProgramData\OACPrintHelper\helper.log`
 - If the helper isn't running, your app can fall back to the normal browser print dialog.
 - If the printer isn't listed in Windows, replug it, try another USB port, and run `Install.bat` again.
+
+## Support
+Built by **OAC Tech Hub**. For help or custom setups, contact us on mobile / WhatsApp: **233200039147**.
 
 ## License
 [MIT](LICENSE)

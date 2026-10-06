@@ -1,4 +1,4 @@
-# Archys Print Helper
+# OAC Print Helper
 # Local service that lets the web app send raw ESC/POS bytes to the receipt
 # printer (auto-cut, bold, logo). Listens on 127.0.0.1 only. Pure PowerShell:
 # nothing to install besides Windows itself.
@@ -15,7 +15,7 @@ if (Test-Path $cfgFile) {
   if ($j.allowedOrigins) { $config.allowedOrigins = @($j.allowedOrigins) }
 }
 
-$logDir = Join-Path $env:ProgramData 'ArchysPrintHelper'
+$logDir = Join-Path $env:ProgramData 'OACPrintHelper'
 $logFile = Join-Path $logDir 'helper.log'
 function Write-Log([string]$msg) {
   try {
